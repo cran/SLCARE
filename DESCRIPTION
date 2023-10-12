@@ -1,7 +1,7 @@
 Package: SLCARE
 Type: Package
 Title: Semiparametric Latent Class Analysis for Recurrent Event
-Version: 1.0.0
+Version: 1.0.1
 Authors@R: c(person(given = "Qi", family = "Yu",
 	   email = "qi.yu2@emory.edu",
 	   role = c("aut", "cre")),
@@ -18,9 +18,9 @@ Imports: dplyr, tidyr, ggplot2, reReg, nnet
 RoxygenNote: 7.2.3
 Suggests: knitr, rmarkdown
 NeedsCompilation: no
-Packaged: 2023-02-20 19:47:41 UTC; qiyu
+Packaged: 2023-10-12 03:03:45 UTC; qiyu
 Author: Qi Yu [aut, cre],
   Limin Peng [aut]
 Depends: R (>= 3.5.0)
 Repository: CRAN
-Date/Publication: 2023-02-22 14:20:12 UTC
+Date/Publication: 2023-10-12 03:20:02 UTC

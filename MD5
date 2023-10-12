@@ -1,11 +1,11 @@
-ce9d9f10142294a049426e716a375f63 *DESCRIPTION
+e1361bd7190bae2ea7bca740968bb3a3 *DESCRIPTION
 c10c75c05f6f30f602305aa1e862c428 *NAMESPACE
-b78bacad8145d72838c5f87325e74562 *R/SLCARE.R
+0b715f362a0b4655ecd05ad299b2061b *R/SLCARE.R
 47c9c1fc03df845ba6c35ca6b39bfc61 *R/SLCARE_simdat.R
 c699f69593fffb853d718a77d86fdd8e *R/estimate_mu_t.R
 98cc44b16781e9dba06c72fdafda2c28 *R/estimate_p_D.R
 8fd0161af44ecb2d5298b32ec60b09f8 *R/estimate_p_xi.R
-17a61c3c938a3108e452e3fc689e2afb *R/obtain_initials_cluster.R
+92b79f36c98195bddc02194e627477cb *R/obtain_initials_cluster.R
 5ff4528e6f93313961c7ee8f7bd15e12 *R/prediction.R
 f66243ca7db2c082b9a8f3044b402220 *R/preprocessingdata.R
 c74d564016fca14d6ca68e64bac474d0 *R/relative_entropy.R
@@ -13,7 +13,7 @@ d11bb7faeeda899c1673ec740b692d79 *R/update_alpha_weightedregression.R
 a27030f67930fd09fa79e586be9135e8 *R/update_beta.R
 bdd88c1dfb932f4d083d089f09614fe3 *data/SLCARE_simdat.RData
 4ab7b200b940e5025dc3a562f3b39108 *man/PreprocessData.Rd
-bb23171b1bd16f535d0e431fa6b7fd4c *man/SLCARE.Rd
+9e87d3251e5a136c9b3cca0213b4ba33 *man/SLCARE.Rd
 58d337460162520216af7bcb1a2ef270 *man/SLCARE_simdat.Rd
 5a6c7cae6a9ebf82a48394a86c1870f2 *man/SLCA_predict.Rd
 1c23b67b82038f774e5c40b07857f5c7 *man/entropy.Rd

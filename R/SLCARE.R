@@ -60,6 +60,22 @@
 #' # Initial values for estimation procedure
 #' model1$InitialAlpha
 #' model1$InitialBeta
+#' # You can select initial value in estimation procedure manually
+#' # alpha <- matrix(c(0, 0, 0.5, -2, 2, -4),
+#' #                 nrow = 3, ncol = 2, byrow = TRUE)
+#' # beta <- matrix(c(2.5, -0.5, -0.3, 1.5, -0.2, -0.5,
+#' #                   2.5,  0.1, 0.2), nrow = 3 , ncol = 2+1 , byrow = TRUE)
+#' # model2 <- SLCARE(alpha, beta, dat = SLCARE_simdat)
+#' # You can define individual frailty with gamma(p,p).
+#' # Below is an example with manually defined initial value and frailty gamma(3,3)
+#' # model3 <- SLCARE(alpha, beta, dat = SLCARE_simdat, gamma = 3)
+#' # You can use bootstrap for bootstrap standard error.
+#' # Bootstrap sample size = 100 (time consuming procedure)
+#' # model4 <- SLCARE(alpha, beta, dat = SLCARE_simdat, boot = 100)
+#' # SLCARE() with "boot" argument will return to two additional contents:
+#' # "alpha_bootse", "beta_bootse" which are Bootsrap standard errors.
+#' # model4$alpha_bootse
+#' # model4$beta_bootse
 
 SLCARE <- function(alpha = NULL, beta = NULL, dat, K = NULL,
                        gamma = 0, max_epoches = 500, conv_threshold = 0.01, boot = NULL){
@@ -197,8 +213,6 @@ SLCARE <- function(alpha = NULL, beta = NULL, dat, K = NULL,
 
     beta_bootsd <- matrix(apply(list_beta_boot, 2, function(x) sd(x[quantile(x , 0.025) <= x & x <= quantile(x, 0.975)])) , nrow = K)
     alpha_bootsd <- matrix(apply(list_alpha_boot, 2, function(x) sd(x[quantile(x , 0.025) <= x & x <= quantile(x, 0.975)])) , nrow = K)
-    ##beta_bootsd <- matrix(apply(list_beta_boot, 2, function(x) sd(x)) , nrow = K)
-    ##alpha_bootsd <- matrix(apply(list_alpha_boot, 2, function(x) sd(x)) , nrow = K)
     colnames(alpha_bootsd) <- colnames(output$alpha)
     rownames(alpha_bootsd) <- rownames(output$alpha)
     colnames(beta_bootsd)  <- colnames(output$beta)
@@ -208,9 +222,7 @@ SLCARE <- function(alpha = NULL, beta = NULL, dat, K = NULL,
 
   }
 
-
-  #add posterior predict
-
+  #posterior predict
   predict <- SLCA_predict(output$alpha, output$beta, d, Z, mu_censor, gamma)
 
   PosteriorPrediction <- cbind(id_wide, predict$PosteriorPredict)
@@ -219,27 +231,36 @@ SLCARE <- function(alpha = NULL, beta = NULL, dat, K = NULL,
   colnames(EstimatedTau) <- c("ID",paste0("class", c(1:K), sep = ""))
   output <- append(output, list("PosteriorPrediction" = PosteriorPrediction, "EstimatedTau" = EstimatedTau))
 
-  #add model checking
-
+  #model checking
   modelcheckdat <- as.data.frame(cbind(d, predict$PosteriorPredict))
 
   colnames(modelcheckdat) <- c("observed", "predicted")
 
+  modelcheckdat <- modelcheckdat |> dplyr::filter(observed != 0)
+
+  modelcheck_gg <- ggplot(modelcheckdat, aes(x = observed, y = predicted)) +
+    #geom_point() +
+    #geom_jitter(width = max(modelcheckdat$observed)/20, height = max(modelcheckdat$observed)/20, alpha = 0.3, col = 'blue') +
+    geom_abline(intercept = 0, slope = 1) +
+    theme(aspect.ratio=1) +
+    ggtitle("Model Checking Plot")
+
   modelcheckplot <- ggplot(modelcheckdat, aes(x = observed, y = predicted)) +
                           geom_point() +
+                          #geom_jitter(width = max(modelcheckdat$observed)/20, height = max(modelcheckdat$observed)/20, alpha = 0.3, col = 'blue') +
                           geom_abline(intercept = 0, slope = 1) +
                           theme(aspect.ratio=1) +
-                          ggtitle("Model Checking")
+                          ggtitle("Model Checking Plot") +
+                          expand_limits(x = 0, y = 0)
                           #coord_fixed(ratio = 1)
 
-  output <- append(output, list("ModelChecking" = modelcheckplot))
+  output <- append(output, list("ModelChecking" = modelcheckplot, "ModelChecking_gg" = modelcheck_gg))
 
-  #add est_mu0
-
+  #est_mu0
   output$est_mu0 <- function(t)
     sapply(t, function(x) mu_t(time_long, censor_long, x))
 
-  #add plot mu_0(t)
+  #plot mu_0(t)
   tseq <- seq(from = min(time_long), to = max(censor_wide), by = (max(censor_wide) - min(time_long))/200 )
   mu0_tseq <- sapply(tseq, function(x) mu_t(time_long, censor_long, x))
 
@@ -247,17 +268,25 @@ SLCARE <- function(alpha = NULL, beta = NULL, dat, K = NULL,
 
   colnames(mu0_t_dat) <- c("t", "mu0t")
 
-  estmu_plot <- ggplot(mu0_t_dat, aes(x = t, y = mu0t)) +
-              geom_smooth(se = FALSE) +
+  estmu_gg <- ggplot(mu0_t_dat, aes(x = t, y = mu0t)) +
     theme(aspect.ratio = 1) +
-    ggtitle(expression(paste(Estimated~mu[0]~(t)))) +
+    ggtitle(expression(paste(Plot~of~hat(mu)~(t)))) +
     xlab("t") +
-    ylab(expression(paste(mu[0]~(t))))
+    ylab(expression(paste(hat(mu)~(t))))
+
+  estmu_plot <- ggplot(mu0_t_dat, aes(x = t, y = mu0t)) +
+              #geom_smooth(se = FALSE) +
+    geom_line(size = 1) +
+    theme(aspect.ratio = 1) +
+    ggtitle(expression(paste(Plot~of~hat(mu)~(t)))) +
+    xlab("t") +
+    ylab(expression(paste(hat(mu)~(t)))) +
+    expand_limits(x = 0, y = 0)
 
 
-  output <- append(output, list("Estimated_mu0t" = estmu_plot))
+  output <- append(output, list("Estimated_mu0t" = estmu_plot, "Estimated_mu0t_gg" = estmu_gg))
 
-  #add estimated mean plot
+  #estimated mean plot
   post_xi <- apply(predict$tauhat, 1, function(x) which.max(x))
   #post_xi_tau <- cbind(post_xi, predict$tauhat)
   tauexpzbeta <- apply(as.matrix(predict$tauhat) * exp(as.matrix(cbind(1, Z)) %*% t(as.matrix(output$beta))), 1, sum)
@@ -269,14 +298,23 @@ SLCARE <- function(alpha = NULL, beta = NULL, dat, K = NULL,
   estmean_crossingdat <- estmean_crossingdat |> mutate(mu0_t_dat_par = par * mu0t)
   estmean_crossingdat$class <- as.factor(estmean_crossingdat$post_xi)
 
-  estmean_plot <- ggplot(estmean_crossingdat, aes(x = t, y = mu0_t_dat_par, colour = class)) +
-    geom_smooth(se = FALSE) +
+  estmean_gg <- ggplot(estmean_crossingdat, aes(x = t, y = mu0_t_dat_par, colour = class)) +
     theme(aspect.ratio = 1) +
     ggtitle("Estimated Mean Function Plot") +
     xlab("t") +
     ylab("Estimated Mean Function")
 
-  output <- append(output, list("Estimated_Mean_Function" = estmean_plot))
+
+  estmean_plot <- ggplot(estmean_crossingdat, aes(x = t, y = mu0_t_dat_par, colour = class)) +
+    #geom_smooth(se = FALSE) +
+    geom_line(size = 1) +
+    theme(aspect.ratio = 1) +
+    ggtitle("Estimated Mean Function Plot") +
+    xlab("t") +
+    ylab("Estimated Mean Function") +
+    expand_limits(x = 0, y = 0)
+
+  output <- append(output, list("Estimated_Mean_Function" = estmean_plot, "Estimated_Mean_Function_gg" = estmean_gg))
 
 
   entropy <- entropy(output$alpha, output$beta, d, Z, mu_censor, gamma)
